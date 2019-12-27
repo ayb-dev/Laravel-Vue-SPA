@@ -50,11 +50,20 @@
                 <form v-on:submit.prevent="createCategory">
                     <div class="form-group">
                         <label for="name">Category name</label>
-                        <input type="text" class="form-control" v-model="categoryData.name" id="name" placeholder="Enter category name">
+                        <input type="text" class="form-control" v-model="categoryData.name" id="name" placeholder="Enter category name" />
+                            
+                        <div class="invalid-feedback" v-if="errors.name">{{ errors.name[0] }}</div>
+
                     </div>
                     <div class="form-group">
                         <label for="image">Category name</label>
-                        <input type="file" v-on:change="attachImage" class="form-control" id="image">
+                        <div v-if="categoryData.image.name">
+                            <img ref="newCategoryImageDisplay" class="w-150px" />
+                        </div>
+                        <input type="file" v-on:change="attachImage" ref="newCategoryImage" class="form-control" id="image">
+
+                        <div class="invalid-feedback" v-if="errors.image">{{ errors.image[0] }}</div>
+
                     </div>
 
                     <hr>
@@ -71,6 +80,7 @@
 </template>
 
 <script>
+import * as categoryService from '../../services/category_service'
 export default {
     name: 'category',
     data() {
@@ -78,12 +88,19 @@ export default {
             categoryData: {
                 name: '',
                 image: '',
-            }
+            },
+            errors: {}
         }
     },
     methods: {
         attachImage(){
-            //to do
+            this.categoryData.image = this.$refs.newCategoryImage.files[0];
+            let reader = new FileReader();
+            reader.addEventListener('load', function(){
+                this.$refs.newCategoryImageDisplay.src = reader.result;
+            }.bind(this), false);
+
+            reader.readAsDataURL(this.categoryData.image);
         },
         hideNewCategoryModal(){
             this.$refs.newCategoryModal.hide()
@@ -92,7 +109,22 @@ export default {
             this.$refs.newCategoryModal.show()
         },
         createCategory(){
-            console.log('form submitted');
+            let formData = new FormData();
+            formData.append('name', this.categoryData.name);
+            formData.append('image', this.categoryData.image);
+
+            try{
+                const response = categoryService.createCategory(formData);
+            }catch(error){
+                switch (error.response.status) {
+                    case 422:
+                        this.errors = error.response.data.errors;
+                        break;
+                    default:
+                        alert('some error occured');
+                        break;
+                }
+            }
         }
     }
 }

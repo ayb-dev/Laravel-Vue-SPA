@@ -8,10 +8,6 @@ export default new Vuex.Store({
         apiURL: 'http://localhost:8000/api',
         serverPath: 'http://localhost:8000'
     },
-    mutations: {
-
-    },
-    actions: {
-
-    }
+    mutations: {},
+    actions: {}
 })

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Category;
 
 class CategoryController extends Controller
 {
@@ -34,7 +35,22 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
+        $request->validate([
+            'name'  => 'required|min:3',
+            'image' => 'required|image|mimes:jpeg,png,jpg'
+        ]);
+        
+        $category = new Category();
+        $category->name = $request->name;
+
+        $path = $request->file('image')->store('categories');
+
+        $category->image = $path;
+        
+        if($category->save()){
+            return response()->json($category, 200);
+        }
+        return response()->json($category, 500);
     }
 
     /**
