@@ -24,17 +24,17 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <td>ID</td>
+                            <td>#</td>
                             <td>Name</td>
                             <td>Image</td>
                             <td>Action</td>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>T-shirt</td>
-                            <td>Image</td>
+                        <tr v-for="(category, index) in categories" :key="index">
+                            <td>{{ index+1 }}</td>
+                            <td>{{ category.name }}</td>
+                            <td><img class="table-image" :src="`${$store.state.serverPath}/storage/${category.image}`" :alt="category.name"></td>
                             <td>
                                 <button class="btn btn-primary btn-sm"><span class="fa fa-edit"></span></button>
                                 <button class="btn btn-danger btn-sm"><span class="fa fa-trash"></span></button>
@@ -85,6 +85,7 @@ export default {
     name: 'category',
     data() {
         return {
+            categories: [],
             categoryData: {
                 name: '',
                 image: '',
@@ -92,7 +93,23 @@ export default {
             errors: {}
         }
     },
+    mounted(){
+        this.loadcategories();
+    },
     methods: {
+        loadcategories: async function(){
+            try{
+                const response = await categoryService.loadCategories();
+                console.log(response);
+                this.categories = response.data.data;
+                console.log(this.categories);
+            }catch(error){
+                this.flashMessage.error({
+                    message: 'Some error ocured, please try again.',
+                    time: 5000
+                });
+            }
+        },
         attachImage(){
             this.categoryData.image = this.$refs.newCategoryImage.files[0];
             let reader = new FileReader();
@@ -108,20 +125,30 @@ export default {
          showNewCategoryModal(){
             this.$refs.newCategoryModal.show()
         },
-        createCategory(){
+        createCategory: async function(){
             let formData = new FormData();
             formData.append('name', this.categoryData.name);
             formData.append('image', this.categoryData.image);
 
             try{
-                const response = categoryService.createCategory(formData);
+                const response = await categoryService.createCategory(formData);
+                this.categories.unshift(response.data);
+
+                this.hideNewCategoryModal();
+                this.flashMessage.success({
+                    message: 'Category stored successfuly.',
+                    time: 5000
+                });
             }catch(error){
                 switch (error.response.status) {
                     case 422:
                         this.errors = error.response.data.errors;
                         break;
                     default:
-                        alert('some error occured');
+                        this.flashMessage.error({
+                            message: 'Some error ocured, please try again.',
+                            time: 5000
+                        });
                         break;
                 }
             }

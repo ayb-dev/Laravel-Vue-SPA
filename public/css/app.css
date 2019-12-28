@@ -381,3 +381,7 @@ a.nav-link.active {
   display: inline-block !important;
 }
 
+.table-image {
+  width: 100px;
+}
+
