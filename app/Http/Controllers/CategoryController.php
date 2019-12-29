@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Category;
 
@@ -95,8 +96,19 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Category $category)
     {
-        //
+        if($category->delete()){
+            Storage::delete($category->image);
+            return response()->json([
+                'message' => 'Category deleted successfully',
+                'status_code' => 200
+            ], 200);
+        }else{
+            return response()->json([
+                'message' => 'Some error occured, please try again.',
+                'status_code' => 500
+            ], 500);
+        }
     }
 }

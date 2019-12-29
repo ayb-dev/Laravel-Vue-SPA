@@ -37,7 +37,7 @@
                             <td><img class="table-image" :src="`${$store.state.serverPath}/storage/${category.image}`" :alt="category.name"></td>
                             <td>
                                 <button class="btn btn-primary btn-sm"><span class="fa fa-edit"></span></button>
-                                <button class="btn btn-danger btn-sm"><span class="fa fa-trash"></span></button>
+                                <button class="btn btn-danger btn-sm" v-on:click="deleteCategory(category)"><span class="fa fa-trash"></span></button>
                             </td>
                         </tr>
                     </tbody>
@@ -139,6 +139,10 @@ export default {
                     message: 'Category stored successfuly.',
                     time: 5000
                 });
+                this.categoryData = {
+                    name: '',
+                    image: '',
+                };
             }catch(error){
                 switch (error.response.status) {
                     case 422:
@@ -151,6 +155,27 @@ export default {
                         });
                         break;
                 }
+            }
+        },
+        deleteCategory: async function(category){
+            if(!window.confirm(`Are you sure you want to delete ${category.name}`)){
+                return;
+            }
+
+            try {
+                await categoryService.deleteCategory(category.id);
+                this.categories = this.categories.filter(obj => {
+                    return obj.id != category.id;
+                });
+                this.flashMessage.success({
+                    message: 'Category deleted successfuly.',
+                    time: 5000
+                });
+            } catch (error) {
+                this.flashMessage.error({
+                    message: error.response.data.message,
+                    time: 5000
+                });
             }
         }
     }
