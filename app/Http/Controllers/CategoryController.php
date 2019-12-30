@@ -85,9 +85,34 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Category $category)
     {
-        //
+        $path = null;
+        $request->validate(['name'  => 'required|min:3']);
+
+        $category->name = $request->name;
+        $oldPath = $category->image;
+
+        if($request->hasFile('image')){
+
+            $request->validate([
+                'image' => 'required|image|mimes:jpeg,png,jpg'
+            ]);
+            
+            $path = $request->file('image')->store('categories');
+            $category->image = $path;
+            Storage::delete($oldPath);
+        }
+
+        if($category->save()){
+            return response()->json($category, 200);
+        }else{
+            Storage::delete($path);
+            return response()->json([
+                'message' => 'Some error occured, please try again.',
+                'status_code' => 500
+            ], 500);
+        }
     }
 
     /**

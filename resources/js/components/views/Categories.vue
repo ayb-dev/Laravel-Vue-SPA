@@ -36,12 +36,13 @@
                             <td>{{ category.name }}</td>
                             <td><img class="table-image" :src="`${$store.state.serverPath}/storage/${category.image}`" :alt="category.name"></td>
                             <td>
-                                <button class="btn btn-primary btn-sm"><span class="fa fa-edit"></span></button>
+                                <button class="btn btn-primary btn-sm" v-on:click="editCategory(category)"><span class="fa fa-edit"></span></button>
                                 <button class="btn btn-danger btn-sm" v-on:click="deleteCategory(category)"><span class="fa fa-trash"></span></button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
+                
             </div>
         </div>
 
@@ -76,6 +77,37 @@
             </div>
         </b-modal>
 
+        <b-modal ref="editCategoryModal" hide-footer title="Edit category">
+            <div class="d-block">
+                <form v-on:submit.prevent="updateCategory">
+                    <div class="form-group">
+                        <label for="name">Category name</label>
+                        <input type="text" class="form-control" v-model="editCategoryData.name" id="name" placeholder="Enter category name" />
+                            
+                        <div class="invalid-feedback" v-if="errors.name">{{ errors.name[0] }}</div>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="image">Category name</label>
+                        <div>
+                            <img :src="`${$store.state.serverPath}/storage/${editCategoryData.image}`" ref="editCategoryImageDisplay" class="w-150px" />
+                        </div>
+                        <input type="file" v-on:change="editAttachImage" ref="editCategoryImage" class="form-control" id="image">
+
+                        <div class="invalid-feedback" v-if="errors.image">{{ errors.image[0] }}</div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="text-right">
+                        <button type="button" class="btn btn-default" v-on:click="hideEditCategoryModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><span class="fa fa-check"></span>Save</button>
+                    </div>
+                </form>
+            </div>
+        </b-modal>
+
     </div>
 </template>
 
@@ -90,6 +122,7 @@ export default {
                 name: '',
                 image: '',
             },
+            editCategoryData: {},
             errors: {}
         }
     },
@@ -100,9 +133,7 @@ export default {
         loadcategories: async function(){
             try{
                 const response = await categoryService.loadCategories();
-                console.log(response);
                 this.categories = response.data.data;
-                console.log(this.categories);
             }catch(error){
                 this.flashMessage.error({
                     message: 'Some error ocured, please try again.',
@@ -174,6 +205,54 @@ export default {
             } catch (error) {
                 this.flashMessage.error({
                     message: error.response.data.message,
+                    time: 5000
+                });
+            }
+        },
+        hideEditCategoryModal(){
+            this.$refs.editCategoryModal.hide();
+        },
+        showEditCategoryModal(){
+            this.$refs.editCategoryModal.show();
+        },
+        editCategory(category){
+            this.editCategoryData = {...category};
+            this.showEditCategoryModal();
+        },
+        editAttachImage(){
+            this.editCategoryData.image = this.$refs.editCategoryImage.files[0];
+            let reader = new FileReader();
+            reader.addEventListener('load', function(){
+                this.$refs.editCategoryImageDisplay.src = reader.result;
+            }.bind(this), false);
+
+            reader.readAsDataURL(this.editCategoryData.image);
+        },
+        updateCategory: async function(){
+            try {
+                const formData = new FormData();
+
+                formData.append('name', this.editCategoryData.name);
+                formData.append('image', this.editCategoryData.image);
+                formData.append('_method', 'PUT');
+
+                const response = await categoryService.updateCategory(this.editCategoryData.id, formData);
+                this.categories.map(category => {
+                    if(category.id == response.data.id){
+                        for(let key in response.data){
+                            category[key] = response.data[key];
+                        }
+                    }
+                });
+
+                this.hideEditCategoryModal();
+                this.flashMessage.success({
+                    message: 'Category updated successfuly.',
+                    time: 5000
+                });
+            } catch (error) {
+                this.flashMessage.error({
+                    message: 'Some error ocured, please try again.',
                     time: 5000
                 });
             }
