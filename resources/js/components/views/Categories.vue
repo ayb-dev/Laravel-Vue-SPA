@@ -42,7 +42,11 @@
                         </tr>
                     </tbody>
                 </table>
-                
+                <div class="text-center" v-show="moreExists">
+                    <button type="button" class="btn btn-primary" v-on:click="loadMore">
+                        <span class="fa fa-arrow-down"></span>Load More
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -123,6 +127,8 @@ export default {
                 image: '',
             },
             editCategoryData: {},
+            moreExists: false,
+            nextPage: 0,
             errors: {}
         }
     },
@@ -134,6 +140,13 @@ export default {
             try{
                 const response = await categoryService.loadCategories();
                 this.categories = response.data.data;
+
+                if(response.data.current_page < response.data.last_page){
+                    this.moreExists = true;
+                    this.nextPage = response.data.current_page + 1;
+                }else{
+                    this.moreExists = false;
+                }
             }catch(error){
                 this.flashMessage.error({
                     message: 'Some error ocured, please try again.',
@@ -153,7 +166,7 @@ export default {
         hideNewCategoryModal(){
             this.$refs.newCategoryModal.hide()
         },
-         showNewCategoryModal(){
+        showNewCategoryModal(){
             this.$refs.newCategoryModal.show()
         },
         createCategory: async function(){
@@ -251,6 +264,31 @@ export default {
                     time: 5000
                 });
             } catch (error) {
+                this.flashMessage.error({
+                    message: 'Some error ocured, please try again.',
+                    time: 5000
+                });
+            }
+        },
+        loadMore: async function(){
+            try{
+                const response = await categoryService.loadMore(this.nextPage);
+                this.categories = response.data.data;
+
+                if(response.data.current_page < response.data.last_page){
+                    this.moreExists = true;
+                    this.nextPage = response.data.current_page + 1;
+                    console.log(this.nextPage);
+                    response.data.data.forEach(data => {
+                        this.categories.push(data);
+                    });
+                }else{
+                    this.moreExists = false;
+                    console.log('moreExists = false');
+                }
+
+                
+            }catch(error){
                 this.flashMessage.error({
                     message: 'Some error ocured, please try again.',
                     time: 5000

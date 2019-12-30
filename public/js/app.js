@@ -2061,6 +2061,10 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
 //
 //
 //
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: 'category',
@@ -2072,6 +2076,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
         image: ''
       },
       editCategoryData: {},
+      moreExists: false,
+      nextPage: 0,
       errors: {}
     };
   },
@@ -2095,23 +2101,31 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
               case 3:
                 response = _context.sent;
                 this.categories = response.data.data;
-                _context.next = 10;
+
+                if (response.data.current_page < response.data.last_page) {
+                  this.moreExists = true;
+                  this.nextPage = response.data.current_page + 1;
+                } else {
+                  this.moreExists = false;
+                }
+
+                _context.next = 11;
                 break;
 
-              case 7:
-                _context.prev = 7;
+              case 8:
+                _context.prev = 8;
                 _context.t0 = _context["catch"](0);
                 this.flashMessage.error({
                   message: 'Some error ocured, please try again.',
                   time: 5000
                 });
 
-              case 10:
+              case 11:
               case "end":
                 return _context.stop();
             }
           }
-        }, _callee, this, [[0, 7]]);
+        }, _callee, this, [[0, 8]]);
       }));
 
       function loadcategories() {
@@ -2323,6 +2337,62 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
       }
 
       return updateCategory;
+    }(),
+    loadMore: function () {
+      var _loadMore = _asyncToGenerator(
+      /*#__PURE__*/
+      _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.mark(function _callee5() {
+        var _this = this;
+
+        var response;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default.a.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _context5.prev = 0;
+                _context5.next = 3;
+                return _services_category_service__WEBPACK_IMPORTED_MODULE_1__["loadMore"](this.nextPage);
+
+              case 3:
+                response = _context5.sent;
+                this.categories = response.data.data;
+
+                if (response.data.current_page < response.data.last_page) {
+                  this.moreExists = true;
+                  this.nextPage = response.data.current_page + 1;
+                  console.log(this.nextPage);
+                  response.data.data.forEach(function (data) {
+                    _this.categories.push(data);
+                  });
+                } else {
+                  this.moreExists = false;
+                  console.log('moreExists = false');
+                }
+
+                _context5.next = 11;
+                break;
+
+              case 8:
+                _context5.prev = 8;
+                _context5.t0 = _context5["catch"](0);
+                this.flashMessage.error({
+                  message: 'Some error ocured, please try again.',
+                  time: 5000
+                });
+
+              case 11:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this, [[0, 8]]);
+      }));
+
+      function loadMore() {
+        return _loadMore.apply(this, arguments);
+      }
+
+      return loadMore;
     }()
   }
 });
@@ -51734,7 +51804,36 @@ var render = function() {
               }),
               0
             )
-          ])
+          ]),
+          _vm._v(" "),
+          _c(
+            "div",
+            {
+              directives: [
+                {
+                  name: "show",
+                  rawName: "v-show",
+                  value: _vm.moreExists,
+                  expression: "moreExists"
+                }
+              ],
+              staticClass: "text-center"
+            },
+            [
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-primary",
+                  attrs: { type: "button" },
+                  on: { click: _vm.loadMore }
+                },
+                [
+                  _c("span", { staticClass: "fa fa-arrow-down" }),
+                  _vm._v("Load More\n                ")
+                ]
+              )
+            ]
+          )
         ])
       ]),
       _vm._v(" "),
@@ -68725,7 +68824,7 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
 /*!***************************************************!*\
   !*** ./resources/js/services/category_service.js ***!
   \***************************************************/
-/*! exports provided: createCategory, loadCategories, deleteCategory, updateCategory */
+/*! exports provided: createCategory, loadCategories, deleteCategory, updateCategory, loadMore */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -68734,6 +68833,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadCategories", function() { return loadCategories; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deleteCategory", function() { return deleteCategory; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateCategory", function() { return updateCategory; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadMore", function() { return loadMore; });
 /* harmony import */ var _http_service__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./http_service */ "./resources/js/services/http_service.js");
 
 function createCategory(data) {
@@ -68747,6 +68847,9 @@ function deleteCategory(id) {
 }
 function updateCategory(id, data) {
   return Object(_http_service__WEBPACK_IMPORTED_MODULE_0__["httpFile"])().post("categories/".concat(id), data);
+}
+function loadMore(naxtPage) {
+  return Object(_http_service__WEBPACK_IMPORTED_MODULE_0__["http"])().get("categories?page=".concat(naxtPage));
 }
 
 /***/ }),
